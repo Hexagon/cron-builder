@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Online Cron Expression Builder - Powered by croner</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css">
+        <style>
+            * {
+                font-family: monospace;
+            }
+            .show {
+                display: block;
+            }
+            .hide {
+                display: none;
+            }
+            #pattern {
+                font-size: 4em;
+                text-align: center;
+            }
+            #error {
+                color: #FF5544;
+            }
+            ul {
+                padding: 0;
+                list-style-type: none;
+            }
+        </style>
+        <script type="module">
+
+            import { Cron } from 'https://cdn.jsdelivr.net/gh/hexagon/croner@4/src/croner.js';
+
+            function arrayStats(inArray, offset) {
+                let stats = {
+                    arr: [],
+                    all: false
+                }
+                inArray.forEach((e, idx) => {
+                    if (e) stats.arr.append(idx);
+                });
+                if (inArray.length === stat.arr.length) stats.all = true;
+                return stats;
+            }
+            
+            let scheduler, getPattern, updateInterface, pattern;
+
+            let config = {
+                // maxRuns: 1,
+                // timezone: 'Europe/Stockholm',
+                // paused: false,
+                // startAt: "2021-12-01T00:00:00",
+                // stopAt: "2021-12-02T00:00:00"
+            };
+
+            // - Fun stuff ----------------------------------
+            let restart = () => {
+
+                if (scheduler) scheduler.stop();
+
+            
+                // This is where magic happen
+                scheduler = Cron(
+                    getPattern(),
+                    config,
+                    () => {
+                        console.log('This will run on selected interval');
+
+                        // Update interface on each run
+                        updateInterface();
+                    }
+                );
+                
+                pattern = scheduler.pattern;
+
+                // Update interface on restart
+                updateInterface();
+            };
+
+            // - Boring stuff ------------------------------
+            const 
+                pause = () => scheduler && scheduler.pause(),
+                resume = () => scheduler && scheduler.resume();
+            
+            getPattern = () => {
+                return document.getElementById('pattern').value;
+            };
+
+            updateInterface = () => {
+                if (scheduler) {
+                    let next6 = scheduler.enumerate(6),
+                        nextHtml = '';
+                    next6.forEach(d=>{
+                        nextHtml += '<li>'+d.toLocaleString()+'</li>';
+                    });
+                    if (next6.length === 0) {
+                        nextHtml += '<li>'+d.toLocaleString()+'</li>';
+                    }
+                    document.getElementById('next').innerHTML = nextHtml;
+                    document.getElementById('previous').innerHTML = (scheduler.previous() ? scheduler.previous().toLocaleString() : '-');
+                    
+                }
+            };
+
+            // Sub second scheduling is best done with setInterval
+            setInterval(() => {
+                let state = scheduler.options.paused ? '?' : scheduler.msToNext();
+                document.getElementById('mstonext').innerHTML = state;
+            },100);
+
+            document.getElementById('pattern').addEventListener('keypress',() => {
+                setTimeout(() => {
+                    try {
+                        restart();
+                        document.getElementById('error').className = 'hide';
+                    } catch (e) {
+                        document.getElementById('error').className = 'show';
+                        document.getElementById('message').innerHTML = e;
+                    }
+                },0);
+            });
+
+            restart();
+        </script>
+    </head>
+    <body>
+        <h1>Online cron parser</h1>
+        <p>
+            Pattern: <input id="pattern" value="* * * * * *"/>
+        </p>
+        <table>
+            <tr>
+                <th>Second(s)</th>
+                <th>Minute(s)</th>
+                <th>Hours(s)</th>
+                <th>Day of month(s)</th>
+                <th>Month</th>
+                <th>Day of week(s)</th>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+        <br>
+        <div id="error" class="hide">
+            <strong>Error:</strong>
+            <div id="message"></div>
+        </div>
+        </p>
+        <p>
+        <strong>Next 20 runs:</strong>
+        <div>
+            <ul id="next">
+            </ul>
+        </div>
+        </p>
+        <p>
+        <strong>Previous run:</strong>
+        <div><ul><li id="previous"></li></ul>
+        </p>
+        <p>
+        <strong>ms to next:</strong>
+        <div><ul><li id="mstonext"></li></ul>
+        </p>
+        <p><i>
+        If you change the config in the js-window, you have to press "Run" to apply the new config.</i>
+        </p>          
+    </body>
+</html>
