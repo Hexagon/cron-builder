@@ -1,4 +1,33 @@
 <!DOCTYPE html>
+<!-- ---------------------------------------------------------------------------------
+
+  cron-builder - MIT License - Hexagon <github.com/Hexagon>
+
+  Source code available at https://github.com/hexagon/cron-builder
+
+  ------------------------------------------------------------------------------------
+
+  License:
+
+	Copyright (c) 2022 Hexagon <github.com/Hexagon>
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+	The above copyright notice and this permission notice shall be included in
+	all copies or substantial portions of the Software.
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+	THE SOFTWARE.
+
+------------------------------------------------------------------------------------ -->
 <html>
     <head>
         <title>Online Cron Expression Builder - Powered by croner</title>
@@ -30,19 +59,7 @@
 
             import { Cron } from 'https://cdn.jsdelivr.net/gh/hexagon/croner@4/src/croner.js';
 
-            function arrayStats(inArray, offset) {
-                let stats = {
-                    arr: [],
-                    all: false
-                }
-                inArray.forEach((e, idx) => {
-                    if (e) stats.arr.append(idx);
-                });
-                if (inArray.length === stat.arr.length) stats.all = true;
-                return stats;
-            }
-            
-            let scheduler, getPattern, updateInterface, pattern;
+            let scheduler, getPattern, updateInterface, buildInterface, buildPart, pattern, readInterface, setPattern;
 
             let config = {
                 // maxRuns: 1,
@@ -51,13 +68,131 @@
                 // startAt: "2021-12-01T00:00:00",
                 // stopAt: "2021-12-02T00:00:00"
             };
+            let weekDays = ["SUN","MON","TUE","WED","THU","FRI","SAT","SUN"];
+            let parts = [{ 
+                    "part": "seconds",
+                    "count": 60,
+                    "offset": 0
+                },{ 
+                    "part": "minutes",
+                    "count": 60,
+                    "offset": 0
+                },{ 
+                    "part": "hours",
+                    "count": 24,
+                    "offset": 0
+                },{ 
+                    "part": "days",
+                    "count": 31,
+                    "offset": 1
+                },{ 
+                    "part": "months",
+                    "count": 12,
+                    "offset": 1
+                },{ 
+                    "part": "daysOfWeek",
+                    "count": 7,
+                    "offset": 0
+                }];
+
+            buildPart = (partName, part) => {
+                let partId = 'part_'+partName.part,
+                    partTarget = document.getElementById(partId),
+                    selectId = 'select_'+partName.part,
+                    selectTarget = document.getElementById(selectId+'_target'),
+                    partHtml = '<td>',
+                    selectHtml = '<select id="'+selectId+'" data-part="'+partName.part+'" class="select"><option value="all">All</option><option value="many">Many</option>';
+                // Build individual checkboxes
+                part.forEach((e, i) => {
+                    let checked = e ? ' checked="checked"' : '',
+                        label = i+partName.offset;
+                    if (partName.part == "daysOfWeek") {
+                        label = weekDays[i];
+                    }
+                    partHtml += '<input type="checkbox" title="'+label+'" id="'+partId+'_'+(i+partName.offset)+'" class="'+partId+' part" data-idt="'+(i+partName.offset)+'" data-part="'+partName.part+'"'+checked+'>';
+                });
+                partTarget.innerHTML = partHtml + '</td>';
+                // Build selects
+                part.forEach((e, i) => {
+                    let selected = e ? ' selected="selected"' : '',
+                        label = i+partName.offset;
+                    if (partName.part == "daysOfWeek") {
+                        label = weekDays[i];
+                    }
+                    selectHtml += '<option value="'+(i+partName.offset)+'"'+selected+'>'+label+'</option>';
+                });
+                selectTarget.innerHTML = selectHtml + '</select>';
+            };
+
+            buildInterface = (pattern) => {
+                parts.forEach(cur => {
+                    buildPart(cur, pattern[cur.part]);
+                });
+            };
+
+            setPattern = (p) => {
+                document.getElementById('pattern').value = p;
+            };
+
+            readInterface = () => {
+                let generatedPattern = '',
+                    first = true;
+                parts.forEach(cur => {
+                    let continous = true,
+                        continousStarted = false,
+                        all = true,
+                        allMatches = [],
+                        min = Infinity,
+                        max = -Infinity,
+                        lastWasTrue = false,
+                        selectId = 'select_' + cur.part;
+                    for(let i = 0; i < cur.count; i++) {
+                        let id = 'part_' + cur.part + '_' + (i+cur.offset),
+                            curValue = document.getElementById(id).checked,
+                            value = i + cur.offset;
+                        if (curValue) {
+                            allMatches.push(value);
+                            if (value < min) min = value;
+                            if (value > max) max = value;
+                            if (continousStarted && !lastWasTrue) continous = false;
+                            continousStarted = true;
+                        } else {
+                            all = false;
+                        }
+                        lastWasTrue = curValue;
+                    }
+                    if (!first) {
+                        generatedPattern += " ";
+                    }
+                    if (all) {
+                        generatedPattern += "*";
+                        document.getElementById(selectId).value = 'all';
+                    } else if (continous && min < max) {
+                        generatedPattern += min + "-" + max;
+                        document.getElementById(selectId).value = 'many';
+                    } else {
+                        if (allMatches.length > 1) {
+                            document.getElementById(selectId).value = 'many';
+                            
+                        generatedPattern += allMatches.join(",");
+                        } else {
+                            console.log(cur.part === "seconds",allMatches[0] === 0);
+                            if (!(cur.part === "seconds" && allMatches[0] === 0)) {
+                                document.getElementById(selectId).value = allMatches[0];
+                                generatedPattern += allMatches.join(",");
+                            }
+                        }
+                    }
+                    first = false;
+                });
+                setPattern(generatedPattern);
+            };
 
             // - Fun stuff ----------------------------------
             let restart = () => {
 
                 if (scheduler) scheduler.stop();
 
-            
                 // This is where magic happen
                 scheduler = Cron(
                     getPattern(),
@@ -72,14 +207,12 @@
                 
                 pattern = scheduler.pattern;
 
+                buildInterface(pattern);
+                readInterface();
+
                 // Update interface on restart
                 updateInterface();
             };
-
-            // - Boring stuff ------------------------------
-            const 
-                pause = () => scheduler && scheduler.pause(),
-                resume = () => scheduler && scheduler.resume();
             
             getPattern = () => {
                 return document.getElementById('pattern').value;
@@ -98,6 +231,7 @@
                     document.getElementById('next').innerHTML = nextHtml;
                     document.getElementById('previous').innerHTML = (scheduler.previous() ? scheduler.previous().toLocaleString() : '-');
                     
+
                 }
             };
 
@@ -119,11 +253,40 @@
                 },0);
             });
 
+            window.addEventListener('click',(e) => {
+                if (e.target.className.indexOf('part') >= 0) {
+                    readInterface();
+                }
+                if (e.target.className.indexOf('select') >= 0) {
+                    if (e.target.value == 'all') {
+                        let asd = document.getElementsByClassName('part_'+e.target.dataset["part"]);
+                        for (let elm of asd) elm.checked = "checked";
+                    } else if (e.target.value == 'many') {
+                        let asd = document.getElementsByClassName('part_'+e.target.dataset["part"]);
+                        let first = true;
+                        for (let elm of asd) {
+                            if (first) {
+                                elm.checked = "checked";
+                                first = false;
+                            } else {
+                                elm.checked = "";
+                            }
+                        }
+                    } else {
+                        let asd = document.getElementsByClassName('part_'+e.target.dataset["part"]);
+                        for (let elm of asd) elm.checked = "";
+                        let asd2 = document.getElementById('part_'+e.target.dataset.part+'_'+e.target.value);
+                        asd2.checked = "checked";
+                    }
+                    readInterface();
+                }
+            });
+
             restart();
         </script>
     </head>
     <body>
-        <h1>Online cron parser</h1>
+        <h1>Cron Expression Builder</h1>
         <p>
             Pattern: <input id="pattern" value="* * * * * *"/>
         </p>
@@ -137,12 +300,20 @@
                 <th>Day of week(s)</th>
             </tr>
             <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td id="select_seconds_target"></td>
+                <td id="select_minutes_target"></td>
+                <td id="select_hours_target"></td>
+                <td id="select_days_target"></td>
+                <td id="select_months_target"></td>
+                <td id="select_daysOfWeek_target"></td>
+            </tr>
+            <tr>
+                <td id="part_seconds"></td>
+                <td id="part_minutes"></td>
+                <td id="part_hours"></td>
+                <td id="part_days"></td>
+                <td id="part_months"></td>
+                <td id="part_daysOfWeek"></td>
             </tr>
         </table>
         <br>
