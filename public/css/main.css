@@ -1,0 +1,20 @@
+* {
+    font-family: monospace;
+}
+.show {
+    display: block;
+}
+.hide {
+    display: none;
+}
+#pattern {
+    font-size: 4em;
+    text-align: center;
+}
+#error {
+    color: #FF5544;
+}
+ul {
+    padding: 0;
+    list-style-type: none;
+}

@@ -1,0 +1,24 @@
+{
+  "name": "cron-builder",
+  "version": "1.0.0",
+  "description": "Cron expression builder - Live at https://cron.56k.guru",
+  "main": "dev-server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dev-server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hexagon/cron-builder.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Hexagon/cron-builder/issues"
+  },
+  "homepage": "https://github.com/Hexagon/cron-builder#readme",
+  "devDependencies": {
+    "finalhandler": "^1.1.2",
+    "serve-static": "^1.14.2"
+  }
+}
