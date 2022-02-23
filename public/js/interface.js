@@ -16,7 +16,7 @@ export {
 
 function GlobalClickListener(e) {
     if (e.target.className.indexOf('part') >= 0) {
-        readInterface();
+        ReadInterface();
     }
     if (e.target.className.indexOf('select') >= 0) {
         if (e.target.value == 'all') {
@@ -39,7 +39,7 @@ function GlobalClickListener(e) {
             let asd2 = document.getElementById('part_'+e.target.dataset.part+'_'+e.target.value);
             asd2.checked = "checked";
         }
-        readInterface();
+        ReadInterface(true);
     }
 }
 
@@ -57,7 +57,7 @@ function UpdateInterface(next6, previous) {
     }
 }
 
-function ShowError() {
+function ShowError(e) {
     document.getElementById('error').className = 'show';
     document.getElementById('message').innerHTML = e;
 }
@@ -74,7 +74,7 @@ function GetPattern() {
     return document.getElementById('pattern').value;
 }
 
-function ReadInterface() {
+function ReadInterface(ignoreSelects) {
     let generatedPattern = '',
         first = true;
     Parts.forEach(cur => {
@@ -85,7 +85,8 @@ function ReadInterface() {
             min = Infinity,
             max = -Infinity,
             lastWasTrue = false,
-            selectId = 'select_' + cur.part;
+            selectId = 'select_' + cur.part,
+            partId = 'part_' + cur.part;
         for(let i = 0; i < cur.count; i++) {
             let id = 'part_' + cur.part + '_' + (i+cur.offset),
                 curValue = document.getElementById(id).checked,
@@ -106,21 +107,27 @@ function ReadInterface() {
         }
         if (all) {
             generatedPattern += "*";
-            document.getElementById(selectId).value = 'all';
+            if (!ignoreSelects) document.getElementById(selectId).value = 'all';
         } else if (continous && min < max) {
             generatedPattern += min + "-" + max;
-            document.getElementById(selectId).value = 'many';
+            if (!ignoreSelects) document.getElementById(selectId).value = 'many';
         } else {
             if (allMatches.length > 1) {
-                document.getElementById(selectId).value = 'many';
+                if (!ignoreSelects) document.getElementById(selectId).value = 'many';
                 generatedPattern += allMatches.join(",");
             } else {
-                console.log(cur.part === "seconds",allMatches[0] === 0);
+                console.log(cur.part === "seconds");
                 if (!(cur.part === "seconds" && allMatches[0] === 0)) {
-                    document.getElementById(selectId).value = allMatches[0];
+                    if (!ignoreSelects) document.getElementById(selectId).value = allMatches[0];
                     generatedPattern += allMatches.join(",");
                 }
             }
+        }
+        console.log(document.getElementById(selectId).value, partId);
+        if (document.getElementById(selectId).value === 'many') {
+            document.getElementById(partId).style.display = 'table-cell';
+        } else {
+            document.getElementById(partId).style.display = 'none';
         }
         first = false;
     });
@@ -142,8 +149,9 @@ function buildPart(partName, part) {
         partTarget = document.getElementById(partId),
         selectId = 'select_'+partName.part,
         selectTarget = document.getElementById(selectId+'_target'),
+        count = 0,
         partHtml = '<td>',
-        selectHtml = '<select id="'+selectId+'" data-part="'+partName.part+'" class="select"><option value="all">All</option><option value="many">Many</option>';
+        selectHtml = '<select id="'+selectId+'" data-part="'+partName.part+'" class="select">';
     // Build individual checkboxes
     part.forEach((e, i) => {
         let checked = e ? ' checked="checked"' : '',
@@ -151,17 +159,33 @@ function buildPart(partName, part) {
         if (partName.part == "daysOfWeek") {
             label = WeekDays[i];
         }
+        if (e) count++;
         partHtml += '<input type="checkbox" title="'+label+'" id="'+partId+'_'+(i+partName.offset)+'" class="'+partId+' part" data-idt="'+(i+partName.offset)+'" data-part="'+partName.part+'"'+checked+'>';
     });
     partTarget.innerHTML = partHtml + '</td>';
     // Build selects
+    console.log(count, part.length);
+    if (count === part.length) {
+        selectHtml += '<option value="many">Many</option>';
+        selectHtml += '<option value="all" selected="selected">All</option>';
+        partTarget.style.display = 'none';
+    } else if (count > 1) {
+        selectHtml += '<option value="many" selected="selected">Many</option>';
+        selectHtml += '<option value="all">All</option>';
+        partTarget.style.display = 'block';
+    } else {
+        selectHtml += '<option value="many">Many</option>';
+        selectHtml += '<option value="all">All</option>';
+        partTarget.style.display = 'none';
+    }
     part.forEach((e, i) => {
-        let selected = e ? ' selected="selected"' : '',
+        let selected = (e && count === 1) ? ' selected="selected"' : '',
             label = i+partName.offset;
         if (partName.part == "daysOfWeek") {
             label = WeekDays[i];
         }
         selectHtml += '<option value="'+(i+partName.offset)+'"'+selected+'>'+label+'</option>';
     });
+    // Hide 
     selectTarget.innerHTML = selectHtml + '</select>';
 };

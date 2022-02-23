@@ -24,7 +24,7 @@ function Start() {
     pattern = scheduler.pattern;
 
     BuildInterface(pattern);
-    ReadInterface();
+    //ReadInterface();
 
     // Update interface on restart
     UpdateInterface(scheduler.enumerate(6),scheduler.previous());
