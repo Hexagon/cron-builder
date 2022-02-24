@@ -14,7 +14,7 @@ export {
     UpdateMSToNext
 };
 
-function GlobalClickListener(e) {
+function GlobalClickListener(e, callback) {
     if (e.target.className.indexOf('part') >= 0) {
         ReadInterface();
     }
@@ -41,6 +41,7 @@ function GlobalClickListener(e) {
         }
         ReadInterface(true);
     }
+    if (callback) callback(true);
 }
 
 function UpdateInterface(next6, previous) {

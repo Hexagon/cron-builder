@@ -5,7 +5,7 @@ import { Config } from './config.js';
 
 let scheduler, pattern;
 
-function Start() {
+function Start(skipRebuild) {
 
     if (scheduler) scheduler.stop();
 
@@ -17,17 +17,19 @@ function Start() {
             console.log('This will run on selected interval');
 
             // Update interface on each run
-            UpdateInterface(scheduler.enumerate(6),scheduler.previous());
+            UpdateInterface(scheduler.enumerate(5),scheduler.previous());
         }
     );
     
     pattern = scheduler.pattern;
 
-    BuildInterface(pattern);
-    //ReadInterface();
+    if (!skipRebuild) {
+        BuildInterface(pattern);
+        //ReadInterface();
+    }
+        // Update interface on restart
+        UpdateInterface(scheduler.enumerate(6),scheduler.previous());
 
-    // Update interface on restart
-    UpdateInterface(scheduler.enumerate(6),scheduler.previous());
 
 };
 
@@ -43,11 +45,11 @@ document.getElementById('pattern').addEventListener('keypress',() => {
             Start();
             HideError();
         } catch (e) {
-            ShowError();
+            ShowError(e);
         }
     },0);
 });
 
-window.addEventListener('click', e => GlobalClickListener(e));
+window.addEventListener('click', e => GlobalClickListener(e, restart => { if (restart) Start(true) }));
 
 Start();
