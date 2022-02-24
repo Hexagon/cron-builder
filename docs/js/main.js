@@ -1,5 +1,5 @@
 
-import { Cron } from 'https://cdn.jsdelivr.net/gh/hexagon/croner@4/src/croner.js';
+import { Cron } from 'https://cdn.jsdelivr.net/gh/hexagon/croner@4.2.1/src/croner.js';
 import { GlobalClickListener, UpdateInterface, UpdateMSToNext, ShowError, HideError, GetPattern, BuildInterface, ReadInterface } from './interface.js';
 import { Config } from './config.js';
 
