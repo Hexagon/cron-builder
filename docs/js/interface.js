@@ -116,14 +116,12 @@ function ReadInterface(ignoreSelects) {
                 if (!ignoreSelects) document.getElementById(selectId).value = 'many';
                 generatedPattern += allMatches.join(",");
             } else {
-                console.log(cur.part === "seconds");
                 if (!(cur.part === "seconds" && allMatches[0] === 0)) {
                     if (!ignoreSelects) document.getElementById(selectId).value = allMatches[0];
                     generatedPattern += allMatches.join(",");
                 }
             }
         }
-        console.log(document.getElementById(selectId).value, partId);
         if (document.getElementById(selectId).value === 'many') {
             document.getElementById(partId).style.display = 'table-cell';
         } else {
@@ -164,7 +162,6 @@ function buildPart(partName, part) {
     });
     partTarget.innerHTML = partHtml + '</td>';
     // Build selects
-    console.log(count, part.length);
     if (count === part.length) {
         selectHtml += '<option value="many">Many</option>';
         selectHtml += '<option value="all" selected="selected">All</option>';

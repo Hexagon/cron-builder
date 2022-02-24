@@ -1,2 +1,7 @@
 # cron-builder
-Cron expression builder - Live at https://cron.56k.guru
+
+Cron expression builder GUI - Live at https://hexagon.github.io/cron-builder
+
+Source in `docs/`-folder
+
+Working WIP
