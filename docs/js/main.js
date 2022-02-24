@@ -27,9 +27,9 @@ function Start(skipRebuild) {
         BuildInterface(pattern);
         //ReadInterface();
     }
-        // Update interface on restart
-        UpdateInterface(scheduler.enumerate(6),scheduler.previous());
 
+    // Update interface on restart
+    UpdateInterface(scheduler.enumerate(6),scheduler.previous());
 
 };
 
@@ -38,18 +38,22 @@ setInterval(() => {
     UpdateMSToNext(scheduler.options.paused ? '?' : scheduler.msToNext());
 }, 100);
 
+function TryStart(skipRebuild) {
+    try {
+        HideError();
+        Start(skipRebuild);
+    } catch (e) {
+        ShowError(e);
+    }
+}
+
 // Events
-document.getElementById('pattern').addEventListener('keypress',() => {
+document.getElementById('pattern').addEventListener('keyup',() => {
     setTimeout(() => {
-        try {
-            Start();
-            HideError();
-        } catch (e) {
-            ShowError(e);
-        }
+        TryStart();
     },0);
 });
 
-window.addEventListener('click', e => GlobalClickListener(e, restart => { if (restart) Start(true) }));
+window.addEventListener('click', e => GlobalClickListener(e, restart => { if (restart) TryStart(true) }));
 
 Start();
